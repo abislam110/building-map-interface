@@ -15,7 +15,14 @@ import { PanoramaModal } from './media/panorama-modal'
  * components are presentational and driven entirely by props, so they're easy
  * to test, reuse, or swap.
  */
-export function MapExplorer({ building }: { building: Building }) {
+export function MapExplorer({
+  building,
+  dataSource = 'api',
+}: {
+  building: Building
+  /** Where `building` came from. 'fallback' shows a notice banner. */
+  dataSource?: 'api' | 'fallback'
+}) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [panorama, setPanorama] = useState<BuildingLocation | null>(null)
@@ -50,6 +57,18 @@ export function MapExplorer({ building }: { building: Building }) {
       />
 
       <div className="relative min-h-0 flex-1">
+        {dataSource === 'fallback' && (
+          <div
+            role="status"
+            className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center p-3"
+          >
+            <p className="pointer-events-auto rounded-full border border-border bg-card/95 px-4 py-1.5 text-center text-xs text-muted-foreground shadow-sm backdrop-blur">
+              Showing bundled sample data &mdash; the Python backend is not
+              reachable. Start it (see <code>backend/README.md</code>) for live
+              data.
+            </p>
+          </div>
+        )}
         <MapCanvas
           building={building}
           selectedId={selectedId}
