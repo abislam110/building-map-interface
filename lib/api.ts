@@ -1,4 +1,4 @@
-import type { Building } from './types'
+import type { Building, BuildingLocation } from './types'
 import fallbackBuilding from './fallback-building.json'
 
 /**
@@ -18,6 +18,17 @@ import fallbackBuilding from './fallback-building.json'
  */
 
 const API_URL = process.env.API_URL ?? 'http://localhost:8000'
+
+/**
+ * Base URL used for calls made from the browser (client components). Must be a
+ * NEXT_PUBLIC_ var so it's inlined into the client bundle. Defaults to the
+ * local FastAPI server.
+ */
+const CLIENT_API_URL =
+  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
+
+/** Fields needed to create a location. The server generates the `id`. */
+export type NewLocationInput = Omit<BuildingLocation, 'id'>
 
 export type BuildingResult = {
   building: Building
@@ -43,4 +54,24 @@ export async function getBuilding(): Promise<BuildingResult> {
     )
     return { building: fallbackBuilding as Building, source: 'fallback' }
   }
+}
+
+/**
+ * Persist a new location to the FastAPI backend (called from the browser).
+ *
+ * Returns the created location, including its server-generated `id`. Throws if
+ * the backend is unreachable or rejects the payload — callers should decide
+ * how to handle that (this app keeps an optimistic local pin either way).
+ */
+export async function createLocation(
+  input: NewLocationInput,
+): Promise<BuildingLocation> {
+  const res = await fetch(`${CLIENT_API_URL}/api/building/locations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+    signal: AbortSignal.timeout(3000),
+  })
+  if (!res.ok) throw new Error(`Backend responded ${res.status}`)
+  return (await res.json()) as BuildingLocation
 }

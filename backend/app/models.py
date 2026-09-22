@@ -7,7 +7,7 @@ a shape here, update that file too so the client stays in sync.
 
 from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class LocationCategory(str, Enum):
@@ -43,6 +43,25 @@ class BuildingLocation(BaseModel):
     thumbnail: str | None = None
     video_url: str | None = Field(default=None, serialization_alias="videoUrl")
     panorama_url: str | None = Field(default=None, serialization_alias="panoramaUrl")
+
+
+class LocationCreate(BaseModel):
+    """Request payload for creating a new location.
+
+    Accepts either camelCase (`videoUrl`, `panoramaUrl`) as sent by the React
+    client, or snake_case, thanks to `populate_by_name`. The server generates
+    the `id`, so it is not part of this payload.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    name: str = Field(..., min_length=1)
+    category: LocationCategory
+    description: str = ""
+    coordinates: MapCoordinates
+    thumbnail: str | None = None
+    video_url: str | None = Field(default=None, alias="videoUrl")
+    panorama_url: str | None = Field(default=None, alias="panoramaUrl")
 
 
 class Building(BaseModel):

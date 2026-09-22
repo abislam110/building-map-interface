@@ -19,8 +19,8 @@ import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from .data import get_building, get_location
-from .models import to_client_json
+from .data import add_location, get_building, get_location
+from .models import LocationCreate, to_client_json
 
 app = FastAPI(
     title="Innovation Hall Map API",
@@ -36,7 +36,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"] if _origins == "*" else [o.strip() for o in _origins.split(",")],
     allow_credentials=False,
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -66,4 +66,12 @@ def read_location(location_id: str):
     location = get_location(location_id)
     if location is None:
         raise HTTPException(status_code=404, detail="Location not found")
+    return to_client_json(location)
+
+
+@app.post("/api/building/locations", status_code=201, tags=["building"])
+def create_location(payload: LocationCreate):
+    """Create a new pin/location and return it (with its server-generated id).
+    The frontend calls this when a user adds a pin via the map UI."""
+    location = add_location(payload)
     return to_client_json(location)

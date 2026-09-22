@@ -21,7 +21,10 @@ Coordinates are { x, y } percentages measured from the TOP-LEFT of the map
 image (0-100). The pin's pointer tip sits exactly on that point.
 """
 
-from .models import Building, BuildingLocation, MapCoordinates
+import re
+from uuid import uuid4
+
+from .models import Building, BuildingLocation, LocationCreate, MapCoordinates
 
 PANORAMA_STANDIN = "https://photo-sphere-viewer-data.netlify.app/assets/sphere.jpg"
 
@@ -121,3 +124,36 @@ def get_building() -> Building:
 def get_location(location_id: str) -> BuildingLocation | None:
     """Return a single location by id, or None if it doesn't exist."""
     return next((loc for loc in BUILDING.locations if loc.id == location_id), None)
+
+
+def _slugify(name: str) -> str:
+    """Turn a display name into a URL-safe id, e.g. 'Conference Room B' ->
+    'conference-room-b'."""
+    slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+    return slug or "location"
+
+
+def add_location(data: LocationCreate) -> BuildingLocation:
+    """Create a new location, append it to the building, and return it.
+
+    NOTE: this stores the pin in the in-memory `BUILDING` object, so new pins
+    live only until the server restarts. Swap the body for a DB/CMS insert to
+    make them durable — the frontend contract stays the same.
+    """
+    existing = {loc.id for loc in BUILDING.locations}
+    location_id = _slugify(data.name)
+    if location_id in existing:
+        location_id = f"{location_id}-{uuid4().hex[:6]}"
+
+    location = BuildingLocation(
+        id=location_id,
+        name=data.name,
+        category=data.category,
+        description=data.description,
+        coordinates=data.coordinates,
+        thumbnail=data.thumbnail,
+        video_url=data.video_url,
+        panorama_url=data.panorama_url,
+    )
+    BUILDING.locations.append(location)
+    return location

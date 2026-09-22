@@ -2,10 +2,12 @@
 
 import { useMemo, useState } from 'react'
 import { CATEGORY_META } from '@/lib/categories'
-import type { Building, BuildingLocation } from '@/lib/types'
+import { createLocation } from '@/lib/api'
+import type { Building, BuildingLocation, MapCoordinates } from '@/lib/types'
 import { Sidebar } from './sidebar/sidebar'
 import { MapCanvas } from './map/map-canvas'
 import { PanoramaModal } from './media/panorama-modal'
+import { AddPinDialog, type NewPinData } from './map/add-pin-dialog'
 
 /**
  * Top-level client component. Owns all shared UI state (selection, search
@@ -23,17 +25,30 @@ export function MapExplorer({
   /** Where `building` came from. 'fallback' shows a notice banner. */
   dataSource?: 'api' | 'fallback'
 }) {
+  // Locations are seeded from the server-fetched building, then kept in local
+  // state so pins added via the UI appear immediately (optimistic add).
+  const [locations, setLocations] = useState<BuildingLocation[]>(
+    building.locations,
+  )
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [panorama, setPanorama] = useState<BuildingLocation | null>(null)
+  // Pin-creation flow: `placing` = waiting for a map click; `draftCoords` =
+  // clicked point, which opens the details form.
+  const [placing, setPlacing] = useState(false)
+  const [draftCoords, setDraftCoords] = useState<MapCoordinates | null>(null)
 
-  const selected =
-    building.locations.find((location) => location.id === selectedId) ?? null
+  const liveBuilding = useMemo<Building>(
+    () => ({ ...building, locations }),
+    [building, locations],
+  )
+
+  const selected = locations.find((location) => location.id === selectedId) ?? null
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return building.locations
-    return building.locations.filter((location) => {
+    if (!q) return locations
+    return locations.filter((location) => {
       const category = CATEGORY_META[location.category].label.toLowerCase()
       return (
         location.name.toLowerCase().includes(q) ||
@@ -41,12 +56,57 @@ export function MapExplorer({
         category.includes(q)
       )
     })
-  }, [building.locations, query])
+  }, [locations, query])
+
+  function handlePlacePin(coords: MapCoordinates) {
+    setDraftCoords(coords)
+    setPlacing(false)
+  }
+
+  function handleCreate(data: NewPinData) {
+    // Optimistically add the pin with a temporary client id so it shows up
+    // instantly, then reconcile with the server-generated id if the POST
+    // succeeds. If the backend is down, the pin simply stays local.
+    const tempId = `pin-${crypto.randomUUID()}`
+    const optimistic: BuildingLocation = {
+      id: tempId,
+      name: data.name,
+      category: data.category,
+      description: data.description,
+      coordinates: data.coordinates,
+      videoUrl: data.videoUrl,
+      panoramaUrl: data.panoramaUrl,
+    }
+    setLocations((prev) => [...prev, optimistic])
+    setSelectedId(tempId)
+    setDraftCoords(null)
+
+    createLocation({
+      name: data.name,
+      category: data.category,
+      description: data.description,
+      coordinates: data.coordinates,
+      videoUrl: data.videoUrl,
+      panoramaUrl: data.panoramaUrl,
+    })
+      .then((saved) => {
+        setLocations((prev) =>
+          prev.map((location) => (location.id === tempId ? saved : location)),
+        )
+        setSelectedId((current) => (current === tempId ? saved.id : current))
+      })
+      .catch((error) => {
+        console.log(
+          '[v0] Could not persist pin to backend; keeping it locally:',
+          error instanceof Error ? error.message : error,
+        )
+      })
+  }
 
   return (
     <main className="flex h-dvh w-full flex-col overflow-hidden md:flex-row">
       <Sidebar
-        building={building}
+        building={liveBuilding}
         results={results}
         selected={selected}
         query={query}
@@ -70,14 +130,26 @@ export function MapExplorer({
           </div>
         )}
         <MapCanvas
-          building={building}
+          building={liveBuilding}
           selectedId={selectedId}
           onSelect={setSelectedId}
+          placing={placing}
+          onStartPlacing={() => setPlacing(true)}
+          onCancelPlacing={() => setPlacing(false)}
+          onPlacePin={handlePlacePin}
         />
       </div>
 
       {panorama && (
         <PanoramaModal location={panorama} onClose={() => setPanorama(null)} />
+      )}
+
+      {draftCoords && (
+        <AddPinDialog
+          coordinates={draftCoords}
+          onSubmit={handleCreate}
+          onClose={() => setDraftCoords(null)}
+        />
       )}
     </main>
   )
