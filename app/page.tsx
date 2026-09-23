@@ -1,10 +1,6 @@
 import { MapExplorer } from '@/components/map-explorer'
-import { getBuilding } from '@/lib/api'
+import { building } from '@/lib/building-data'
 
-// Data comes from the Python FastAPI backend at request time.
-export const dynamic = 'force-dynamic'
-
-export default async function Page() {
-  const { building, source } = await getBuilding()
-  return <MapExplorer building={building} dataSource={source} />
+export default function Page() {
+  return <MapExplorer building={building} />
 }

@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from 'react'
 import { CATEGORY_META } from '@/lib/categories'
-import { createLocation } from '@/lib/api'
 import type { Building, BuildingLocation, MapCoordinates } from '@/lib/types'
 import { Sidebar } from './sidebar/sidebar'
 import { MapCanvas } from './map/map-canvas'
@@ -17,16 +16,10 @@ import { AddPinDialog, type NewPinData } from './map/add-pin-dialog'
  * components are presentational and driven entirely by props, so they're easy
  * to test, reuse, or swap.
  */
-export function MapExplorer({
-  building,
-  dataSource = 'api',
-}: {
-  building: Building
-  /** Where `building` came from. 'fallback' shows a notice banner. */
-  dataSource?: 'api' | 'fallback'
-}) {
-  // Locations are seeded from the server-fetched building, then kept in local
-  // state so pins added via the UI appear immediately (optimistic add).
+export function MapExplorer({ building }: { building: Building }) {
+  // Locations are seeded from the building data, then kept in local state so
+  // pins added via the UI appear immediately. Added pins live in memory only
+  // and reset on reload; edit `lib/building-data.ts` to make them permanent.
   const [locations, setLocations] = useState<BuildingLocation[]>(
     building.locations,
   )
@@ -64,12 +57,10 @@ export function MapExplorer({
   }
 
   function handleCreate(data: NewPinData) {
-    // Optimistically add the pin with a temporary client id so it shows up
-    // instantly, then reconcile with the server-generated id if the POST
-    // succeeds. If the backend is down, the pin simply stays local.
-    const tempId = `pin-${crypto.randomUUID()}`
-    const optimistic: BuildingLocation = {
-      id: tempId,
+    // Add the pin to local state so it shows up instantly. This is in-memory
+    // only and resets on reload — add it to `lib/building-data.ts` to persist.
+    const newLocation: BuildingLocation = {
+      id: `pin-${crypto.randomUUID()}`,
       name: data.name,
       category: data.category,
       description: data.description,
@@ -77,30 +68,9 @@ export function MapExplorer({
       videoUrl: data.videoUrl,
       panoramaUrl: data.panoramaUrl,
     }
-    setLocations((prev) => [...prev, optimistic])
-    setSelectedId(tempId)
+    setLocations((prev) => [...prev, newLocation])
+    setSelectedId(newLocation.id)
     setDraftCoords(null)
-
-    createLocation({
-      name: data.name,
-      category: data.category,
-      description: data.description,
-      coordinates: data.coordinates,
-      videoUrl: data.videoUrl,
-      panoramaUrl: data.panoramaUrl,
-    })
-      .then((saved) => {
-        setLocations((prev) =>
-          prev.map((location) => (location.id === tempId ? saved : location)),
-        )
-        setSelectedId((current) => (current === tempId ? saved.id : current))
-      })
-      .catch((error) => {
-        console.log(
-          '[v0] Could not persist pin to backend; keeping it locally:',
-          error instanceof Error ? error.message : error,
-        )
-      })
   }
 
   return (
@@ -117,18 +87,6 @@ export function MapExplorer({
       />
 
       <div className="relative min-h-0 flex-1">
-        {dataSource === 'fallback' && (
-          <div
-            role="status"
-            className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center p-3"
-          >
-            <p className="pointer-events-auto rounded-full border border-border bg-card/95 px-4 py-1.5 text-center text-xs text-muted-foreground shadow-sm backdrop-blur">
-              Showing bundled sample data &mdash; the Python backend is not
-              reachable. Start it (see <code>backend/README.md</code>) for live
-              data.
-            </p>
-          </div>
-        )}
         <MapCanvas
           building={liveBuilding}
           selectedId={selectedId}
