@@ -30,10 +30,13 @@ export function MapExplorer({ building }: { building: Building }) {
   // clicked point, which opens the details form.
   const [placing, setPlacing] = useState(false)
   const [draftCoords, setDraftCoords] = useState<MapCoordinates | null>(null)
+  // Map-image override set via the "Change map" button. In-memory only and
+  // resets on reload — set `mapImage` in `lib/building-data.ts` to persist.
+  const [mapImage, setMapImage] = useState<string | null>(null)
 
   const liveBuilding = useMemo<Building>(
-    () => ({ ...building, locations }),
-    [building, locations],
+    () => ({ ...building, locations, mapImage: mapImage ?? building.mapImage }),
+    [building, locations, mapImage],
   )
 
   const selected = locations.find((location) => location.id === selectedId) ?? null
@@ -104,6 +107,7 @@ export function MapExplorer({ building }: { building: Building }) {
           onStartPlacing={() => setPlacing(true)}
           onCancelPlacing={() => setPlacing(false)}
           onPlacePin={handlePlacePin}
+          onChangeMap={setMapImage}
         />
       </div>
 

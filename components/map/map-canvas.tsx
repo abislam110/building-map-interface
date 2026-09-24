@@ -6,7 +6,7 @@ import {
   TransformWrapper,
   type ReactZoomPanPinchRef,
 } from 'react-zoom-pan-pinch'
-import { Minus, Plus, Maximize2, MapPin, X } from 'lucide-react'
+import { Minus, Plus, Maximize2, MapPin, X, ImageUp } from 'lucide-react'
 import { CATEGORY_META, CATEGORY_ORDER } from '@/lib/categories'
 import type { Building, MapCoordinates } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -22,6 +22,8 @@ interface MapCanvasProps {
   onCancelPlacing: () => void
   /** Fired with the clicked point (x/y percentages) while placing. */
   onPlacePin: (coords: MapCoordinates) => void
+  /** Fired with a new map image source when the user changes the map. */
+  onChangeMap: (src: string) => void
 }
 
 /**
@@ -40,10 +42,23 @@ export function MapCanvas({
   onStartPlacing,
   onCancelPlacing,
   onPlacePin,
+  onChangeMap,
 }: MapCanvasProps) {
   const [scale, setScale] = useState(1)
   const transformRef = useRef<ReactZoomPanPinchRef | null>(null)
   const markerRefs = useRef<Record<string, HTMLButtonElement | null>>({})
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  function handleMapFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Object URL keeps the swap client-side and instant. To make a new map
+      // permanent, drop the image in `public/` and set `mapImage` in data.
+      onChangeMap(URL.createObjectURL(file))
+    }
+    // Reset so selecting the same file again still fires onChange.
+    e.target.value = ''
+  }
 
   useEffect(() => {
     if (!selectedId) return
@@ -117,6 +132,23 @@ export function MapCanvas({
             </TransformComponent>
 
             <MapLegend />
+
+            {/* Top-left: change the underlying map image */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleMapFile}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute left-4 top-4 flex items-center gap-2 rounded-lg bg-card px-3.5 py-2 text-sm font-semibold text-card-foreground shadow-lg ring-1 ring-border transition-colors hover:bg-accent"
+            >
+              <ImageUp className="h-4 w-4" />
+              Change map
+            </button>
 
             {placing && (
               <div className="pointer-events-none absolute inset-x-0 bottom-6 z-20 flex justify-center px-4">
