@@ -10,10 +10,18 @@ import type { Building } from './types'
  *   - each location's `coordinates`: x/y as percentages (0–100) of the map image.
  *   - `description`: shown in the sidebar detail view.
  *   - `videoUrl` (optional): drop files in /public/videos and reference them here.
- *   - `panoramaUrl` (optional): equirectangular 360° image, in /public/panoramas.
+ *   - `panoramaUrl` (optional): equirectangular 360° image (2:1 ratio).
  *   - `thumbnail` (optional): small preview image for the detail view.
  *
- * The media URLs below are public stand-ins — swap them for your own assets.
+ * PLUG-AND-PLAY 360° PANORAMAS:
+ * Each `panoramaUrl` below points at a local file in `/public/panoramas/`,
+ * named after the location id (e.g. `/panoramas/lobby.jpg`). Those files are
+ * currently equirectangular stand-ins. To use your own 360° photo, just drop
+ * your image into `public/panoramas/` and overwrite the matching file — keep
+ * the same filename and you don't have to touch any code. (You can also point
+ * `panoramaUrl` at any other /public path or an absolute URL if you prefer.)
+ *
+ * The video/thumbnail URLs are public stand-ins — swap them for your own assets.
  */
 export const building: Building = {
   id: 'innovation-hall',
@@ -28,7 +36,7 @@ export const building: Building = {
       description:
         'The primary street-level entrance. Accessible ramp on the east side and a covered drop-off zone directly out front.',
       coordinates: { x: 50, y: 91 },
-      panoramaUrl: 'https://photo-sphere-viewer-data.netlify.app/assets/sphere.jpg',
+      panoramaUrl: '/panoramas/main-entrance.jpg',
     },
     {
       id: 'lobby',
@@ -38,7 +46,7 @@ export const building: Building = {
         'Double-height reception area with the welcome desk, visitor check-in kiosks, and seating. Start any tour here.',
       coordinates: { x: 50, y: 66 },
       thumbnail: '/thumbnails/lobby.png',
-      panoramaUrl: 'https://photo-sphere-viewer-data.netlify.app/assets/sphere.jpg',
+      panoramaUrl: '/panoramas/lobby.jpg',
       videoUrl:
         'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
     },
@@ -59,7 +67,7 @@ export const building: Building = {
       description:
         'Coffee bar and grab-and-go counter. Open 7am-4pm on weekdays. Seating spills into the adjacent courtyard.',
       coordinates: { x: 73, y: 39 },
-      panoramaUrl: 'https://photo-sphere-viewer-data.netlify.app/assets/sphere.jpg',
+      panoramaUrl: '/panoramas/cafe.jpg',
     },
     {
       id: 'innovation-lab',
@@ -68,7 +76,7 @@ export const building: Building = {
       description:
         'Hardware prototyping lab with 3D printers, a laser cutter, and electronics benches. Badge access required.',
       coordinates: { x: 39, y: 24 },
-      panoramaUrl: 'https://photo-sphere-viewer-data.netlify.app/assets/sphere.jpg',
+      panoramaUrl: '/panoramas/innovation-lab.jpg',
       videoUrl:
         'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
     },
@@ -79,7 +87,7 @@ export const building: Building = {
       description:
         'Landscaped open-air courtyard at the heart of the building. A quiet spot for breaks and informal meetings.',
       coordinates: { x: 82, y: 71 },
-      panoramaUrl: 'https://photo-sphere-viewer-data.netlify.app/assets/sphere.jpg',
+      panoramaUrl: '/panoramas/courtyard.jpg',
     },
   ],
 }
