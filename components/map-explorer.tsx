@@ -56,6 +56,14 @@ export function MapExplorer({ building }: { building: Building }) {
     setPlacing(false)
   }
 
+  function handleDelete(id: string) {
+    // Remove the pin from local state. Like additions, this is in-memory only
+    // and resets on reload — remove it from `lib/building-data.ts` to persist.
+    setLocations((prev) => prev.filter((location) => location.id !== id))
+    if (selectedId === id) setSelectedId(null)
+    setPanorama((current) => (current?.id === id ? null : current))
+  }
+
   function handleCreate(data: NewPinData) {
     // Add the pin to local state so it shows up instantly. This is in-memory
     // only and resets on reload — add it to `lib/building-data.ts` to persist.
@@ -84,6 +92,7 @@ export function MapExplorer({ building }: { building: Building }) {
         onSelect={setSelectedId}
         onBack={() => setSelectedId(null)}
         onOpenPanorama={setPanorama}
+        onDelete={handleDelete}
       />
 
       <div className="relative min-h-0 flex-1">

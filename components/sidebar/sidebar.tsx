@@ -15,6 +15,7 @@ interface SidebarProps {
   onSelect: (id: string) => void
   onBack: () => void
   onOpenPanorama: (location: BuildingLocation) => void
+  onDelete: (id: string) => void
 }
 
 export function Sidebar({
@@ -26,6 +27,7 @@ export function Sidebar({
   onSelect,
   onBack,
   onOpenPanorama,
+  onDelete,
 }: SidebarProps) {
   return (
     <aside className="flex h-1/2 w-full shrink-0 flex-col border-b border-border bg-sidebar md:h-full md:w-[380px] md:border-b-0 md:border-r">
@@ -64,6 +66,7 @@ export function Sidebar({
             location={selected}
             onBack={onBack}
             onOpenPanorama={onOpenPanorama}
+            onDelete={onDelete}
           />
         ) : (
           <LocationList locations={results} onSelect={onSelect} />
