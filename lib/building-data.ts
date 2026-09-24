@@ -57,6 +57,7 @@ export const building: Building = {
       description:
         '220-seat auditorium used for keynotes and all-hands. Equipped with a full AV rig and a live-stream booth.',
       coordinates: { x: 24, y: 44 },
+      panoramaUrl: '/panoramas/auditorium.jpg',
       videoUrl:
         'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
     },
