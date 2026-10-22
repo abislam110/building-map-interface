@@ -1,25 +1,21 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { ArrowLeft, Trash2, View } from 'lucide-react'
 import { CATEGORY_META } from '@/lib/categories'
 import type { BuildingLocation } from '@/lib/types'
 import { VideoPlayer } from '@/components/media/video-player'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 interface LocationDetailProps {
   location: BuildingLocation
   onBack: () => void
-  onOpenPanorama: (location: BuildingLocation) => void
   onDelete: (id: string) => void
 }
 
-export function LocationDetail({
-  location,
-  onBack,
-  onOpenPanorama,
-  onDelete,
-}: LocationDetailProps) {
+export function LocationDetail({ location, onBack, onDelete }: LocationDetailProps) {
   const meta = CATEGORY_META[location.category]
   const [confirmingDelete, setConfirmingDelete] = useState(false)
 
@@ -73,15 +69,14 @@ export function LocationDetail({
           {location.description}
         </p>
 
-        {location.panoramaUrl && (
-          <Button
-            onClick={() => onOpenPanorama(location)}
-            className="w-full gap-2"
-            size="lg"
+        {location.tourSceneId && (
+          <Link
+            href={`/tour?scene=${encodeURIComponent(location.tourSceneId)}`}
+            className={cn(buttonVariants({ size: 'lg' }), 'h-11 w-full gap-2')}
           >
             <View className="h-4 w-4" />
             View 360°
-          </Button>
+          </Link>
         )}
 
         {location.videoUrl && (

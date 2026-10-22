@@ -5,12 +5,12 @@ import { CATEGORY_META } from '@/lib/categories'
 import type { Building, BuildingLocation, MapCoordinates } from '@/lib/types'
 import { Sidebar } from './sidebar/sidebar'
 import { MapCanvas } from './map/map-canvas'
-import { PanoramaModal } from './media/panorama-modal'
 import { AddPinDialog, type NewPinData } from './map/add-pin-dialog'
 
 /**
  * Top-level client component. Owns all shared UI state (selection, search
- * query, open panorama) and wires the sidebar and map together.
+ * query, pin placement) and wires the sidebar and map together. The 360° tour
+ * lives on its own page (`app/tour`).
  *
  * This is deliberately the only stateful piece — sidebar, map, and media
  * components are presentational and driven entirely by props, so they're easy
@@ -25,7 +25,6 @@ export function MapExplorer({ building }: { building: Building }) {
   )
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [query, setQuery] = useState('')
-  const [panorama, setPanorama] = useState<BuildingLocation | null>(null)
   // Pin-creation flow: `placing` = waiting for a map click; `draftCoords` =
   // clicked point, which opens the details form.
   const [placing, setPlacing] = useState(false)
@@ -64,7 +63,6 @@ export function MapExplorer({ building }: { building: Building }) {
     // and resets on reload — remove it from `lib/building-data.ts` to persist.
     setLocations((prev) => prev.filter((location) => location.id !== id))
     if (selectedId === id) setSelectedId(null)
-    setPanorama((current) => (current?.id === id ? null : current))
   }
 
   function handleCreate(data: NewPinData) {
@@ -77,7 +75,7 @@ export function MapExplorer({ building }: { building: Building }) {
       description: data.description,
       coordinates: data.coordinates,
       videoUrl: data.videoUrl,
-      panoramaUrl: data.panoramaUrl,
+      tourSceneId: data.tourSceneId,
     }
     setLocations((prev) => [...prev, newLocation])
     setSelectedId(newLocation.id)
@@ -94,7 +92,6 @@ export function MapExplorer({ building }: { building: Building }) {
         onQuery={setQuery}
         onSelect={setSelectedId}
         onBack={() => setSelectedId(null)}
-        onOpenPanorama={setPanorama}
         onDelete={handleDelete}
       />
 
@@ -111,13 +108,10 @@ export function MapExplorer({ building }: { building: Building }) {
         />
       </div>
 
-      {panorama && (
-        <PanoramaModal location={panorama} onClose={() => setPanorama(null)} />
-      )}
-
       {draftCoords && (
         <AddPinDialog
           coordinates={draftCoords}
+          scenes={building.tour.scenes}
           onSubmit={handleCreate}
           onClose={() => setDraftCoords(null)}
         />

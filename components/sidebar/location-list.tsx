@@ -47,7 +47,7 @@ export function LocationList({ locations, onSelect }: LocationListProps) {
                   {location.videoUrl && (
                     <Video className="h-3.5 w-3.5" aria-label="Has video" />
                   )}
-                  {location.panoramaUrl && (
+                  {location.tourSceneId && (
                     <View className="h-3.5 w-3.5" aria-label="Has 360 view" />
                   )}
                 </span>

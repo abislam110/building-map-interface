@@ -30,7 +30,7 @@ export interface MapCoordinates {
 /**
  * A single point of interest inside the building.
  *
- * `description` is always shown in the sidebar. `videoUrl` and `panoramaUrl`
+ * `description` is always shown in the sidebar. `videoUrl` and `tourSceneId`
  * are optional — when present, the sidebar renders a video player and/or a
  * "View 360°" button respectively.
  */
@@ -53,10 +53,50 @@ export interface BuildingLocation {
    */
   videoUrl?: string
   /**
-   * Optional equirectangular 360° panorama image.
-   * Swap in your own file under /public/panoramas when available.
+   * Optional id of a `TourScene`. When set, the sidebar shows "View 360°",
+   * which opens the walkable tour (`/tour?scene=<id>`) at that scene.
    */
-  panoramaUrl?: string
+  tourSceneId?: string
+}
+
+/**
+ * A clickable ground arrow inside a scene that moves the viewer to another
+ * scene, like the arrows in Google Street View.
+ */
+export interface TourLink {
+  /** Id of the destination `TourScene`. */
+  to: string
+  /**
+   * Horizontal direction of the arrow in degrees (0–360), measured in the
+   * panorama image: 0 = the image's horizontal center, increasing to the right.
+   * Tip: open the scene, face the doorway, and read the yaw from the
+   * "Heading" readout in the top bar.
+   */
+  yaw: number
+  /** Vertical placement in degrees. Defaults to -25 (on the floor). */
+  pitch?: number
+}
+
+/** One 360° photo in the walkable tour. */
+export interface TourScene {
+  id: string
+  /** Display name, e.g. "Main Lobby". */
+  name: string
+  /** Equirectangular (2:1) image, e.g. `/panoramas/<id>.jpg`. */
+  image: string
+  /** Where this photo was taken on the map, for the tour minimap. */
+  coordinates?: MapCoordinates
+  /** Direction (degrees) the camera faces when the scene opens. */
+  initialYaw?: number
+  /** Arrows to neighbouring scenes. */
+  links: TourLink[]
+}
+
+/** The walkable 360° tour: a graph of scenes connected by `links`. */
+export interface Tour {
+  /** Scene shown when `/tour` is opened without `?scene=`. */
+  startSceneId: string
+  scenes: TourScene[]
 }
 
 /** The building rendered by the app. There is exactly one per deployment. */
@@ -69,4 +109,6 @@ export interface Building {
   mapImage: string
   /** All points of interest to render as pins. */
   locations: BuildingLocation[]
+  /** The walkable 360° tour shown on the `/tour` page. */
+  tour: Tour
 }

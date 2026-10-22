@@ -90,7 +90,7 @@ export function MapCanvas({
         limitToBounds={false}
         doubleClick={{ step: 0.7 }}
         wheel={{ step: 0.12 }}
-        onTransformed={(_ref, state) => setScale(state.scale)}
+        onTransform={(_ref, state) => setScale(state.scale)}
       >
         {({ zoomIn, zoomOut, resetTransform }) => (
           <>

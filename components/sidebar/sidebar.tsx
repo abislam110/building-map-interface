@@ -1,6 +1,7 @@
 'use client'
 
-import { MapPin, Search } from 'lucide-react'
+import Link from 'next/link'
+import { MapPin, Search, View } from 'lucide-react'
 import type { Building, BuildingLocation } from '@/lib/types'
 import { LocationList } from './location-list'
 import { LocationDetail } from './location-detail'
@@ -14,7 +15,6 @@ interface SidebarProps {
   onQuery: (value: string) => void
   onSelect: (id: string) => void
   onBack: () => void
-  onOpenPanorama: (location: BuildingLocation) => void
   onDelete: (id: string) => void
 }
 
@@ -26,7 +26,6 @@ export function Sidebar({
   onQuery,
   onSelect,
   onBack,
-  onOpenPanorama,
   onDelete,
 }: SidebarProps) {
   return (
@@ -42,6 +41,13 @@ export function Sidebar({
           </h1>
           <p className="truncate text-xs text-muted-foreground">{building.address}</p>
         </div>
+        <Link
+          href="/tour"
+          className="ml-auto flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-border px-3 text-xs font-medium text-foreground transition-colors hover:bg-accent"
+        >
+          <View className="h-4 w-4" />
+          360° tour
+        </Link>
       </div>
 
       {/* Search */}
@@ -65,7 +71,6 @@ export function Sidebar({
           <LocationDetail
             location={selected}
             onBack={onBack}
-            onOpenPanorama={onOpenPanorama}
             onDelete={onDelete}
           />
         ) : (

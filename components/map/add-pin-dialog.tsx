@@ -9,7 +9,7 @@ import {
 } from 'react'
 import { X } from 'lucide-react'
 import { CATEGORY_META, CATEGORY_ORDER } from '@/lib/categories'
-import type { LocationCategory, MapCoordinates } from '@/lib/types'
+import type { LocationCategory, MapCoordinates, TourScene } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 /** Data collected by the form. `coordinates` come from the map click. */
@@ -18,13 +18,15 @@ export interface NewPinData {
   category: LocationCategory
   description: string
   videoUrl?: string
-  panoramaUrl?: string
+  tourSceneId?: string
   coordinates: MapCoordinates
 }
 
 interface AddPinDialogProps {
   /** Where the user clicked, as x/y percentages of the map image. */
   coordinates: MapCoordinates
+  /** Tour scenes the new pin's "View 360°" button can open. */
+  scenes: TourScene[]
   onSubmit: (data: NewPinData) => void
   onClose: () => void
 }
@@ -38,6 +40,7 @@ const inputClass =
  */
 export function AddPinDialog({
   coordinates,
+  scenes,
   onSubmit,
   onClose,
 }: AddPinDialogProps) {
@@ -45,7 +48,7 @@ export function AddPinDialog({
   const [category, setCategory] = useState<LocationCategory>('room')
   const [description, setDescription] = useState('')
   const [videoUrl, setVideoUrl] = useState('')
-  const [panoramaUrl, setPanoramaUrl] = useState('')
+  const [tourSceneId, setTourSceneId] = useState('')
   const nameRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -69,7 +72,7 @@ export function AddPinDialog({
       category,
       description: description.trim(),
       videoUrl: videoUrl.trim() || undefined,
-      panoramaUrl: panoramaUrl.trim() || undefined,
+      tourSceneId: tourSceneId || undefined,
       coordinates,
     })
   }
@@ -168,13 +171,19 @@ export function AddPinDialog({
             />
           </Field>
 
-          <Field label="360 panorama URL" hint="optional">
-            <input
-              value={panoramaUrl}
-              onChange={(e) => setPanoramaUrl(e.target.value)}
-              placeholder="/panoramas/my-360.jpg"
+          <Field label="360° tour scene" hint="optional">
+            <select
+              value={tourSceneId}
+              onChange={(e) => setTourSceneId(e.target.value)}
               className={inputClass}
-            />
+            >
+              <option value="">None</option>
+              {scenes.map((scene) => (
+                <option key={scene.id} value={scene.id}>
+                  {scene.name}
+                </option>
+              ))}
+            </select>
           </Field>
 
           <div className="mt-1 flex justify-end gap-2">
